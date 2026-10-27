@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Кыргыз жараны</title>
+
+  <!-- Bootstrap 5 + Bootstrap Icons (CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --navy: #0b1530;
+      --gold: #f2b632;
+      --red: #d62839;
+      --glass: rgba(255, 255, 255, .12);
+      --glass-line: rgba(255, 255, 255, .28);
+    }
+    html, body { height: 100%; margin: 0; overflow: hidden; background: var(--navy); color: #fff; }
+
+    /* ---------- Слайд ---------- */
+    .slide {
+      position: fixed; inset: 0;
+      display: flex; align-items: center;
+      padding: 2rem 0 6.5rem;
+      overflow-y: auto;
+      opacity: 0; visibility: hidden;
+      transform: translateX(60px) scale(1.02);
+      transition: opacity .7s ease, transform .7s ease, visibility 0s linear .7s;
+      /* фото + затемнение + запасной градиент (если фото не жүктөлбөсө) */
+      background-image:
+        linear-gradient(105deg, rgba(11,21,48,.92) 0%, rgba(11,21,48,.66) 55%, rgba(11,21,48,.35) 100%),
+        var(--img),
+        linear-gradient(135deg, #0b1530 0%, #24407a 55%, #d62839 140%);
+      background-size: cover; background-position: center;
+    }
+    .slide.active { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+    .slide.before { transform: translateX(-60px) scale(1.02); }
+
+    /* ---------- Типографика ---------- */
+    h1.display-title { font-size: clamp(2.8rem, 9vw, 6.5rem); font-weight: 800; line-height: 1.02; letter-spacing: -.02em; }
+    h2.slide-title { font-size: clamp(1.9rem, 4.6vw, 3.2rem); font-weight: 800; line-height: 1.1; margin-bottom: .5rem; }
+    .lead-text { font-size: clamp(1.1rem, 2vw, 1.55rem); max-width: 40rem; opacity: .92; }
+    .gold { color: var(--gold); }
+    .badge-pill {
+      display: inline-block; padding: .45rem 1rem; border-radius: 99px;
+      background: var(--gold); color: var(--navy); font-weight: 700; font-size: .95rem;
+    }
+
+    /* ---------- Glassmorphism карточкалар ---------- */
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(16px) saturate(140%);
+      -webkit-backdrop-filter: blur(16px) saturate(140%);
+      border: 1px solid var(--glass-line);
+      border-radius: 22px;
+      padding: 1.5rem;
+      height: 100%;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, .28);
+      transition: transform .3s ease, background .3s ease;
+    }
+    .glass:hover { transform: translateY(-6px); background: rgba(255, 255, 255, .18); }
+    .glass h3 { font-size: 1.35rem; font-weight: 700; margin: .9rem 0 .5rem; }
+    .glass p, .glass li { font-size: 1.05rem; line-height: 1.5; opacity: .93; margin-bottom: .4rem; }
+    .glass ul { padding-left: 1.1rem; margin: 0; }
+    .icon-ring {
+      width: 3.4rem; height: 3.4rem; border-radius: 50%;
+      display: grid; place-items: center; font-size: 1.6rem;
+      background: linear-gradient(135deg, var(--gold), #ff8a3d); color: var(--navy);
+    }
+    .banner {
+      background: linear-gradient(90deg, var(--red), #ff5a4d);
+      border-radius: 18px; padding: 1.1rem 1.5rem; font-weight: 700; font-size: 1.25rem;
+    }
+
+    /* ---------- Анимация: карточкалар ырааттуу чыгат ---------- */
+    .slide .reveal { opacity: 0; transform: translateY(26px); }
+    .slide.active .reveal { animation: rise .7s ease forwards; animation-delay: calc(var(--i, 0) * .14s + .25s); }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+
+    /* ---------- Башкаруу панели ---------- */
+    .progress-line { position: fixed; top: 0; left: 0; height: 5px; width: 0; z-index: 20;
+      background: linear-gradient(90deg, var(--red), var(--gold)); transition: width .6s ease; }
+    .controls {
+      position: fixed; left: 50%; bottom: 1.4rem; transform: translateX(-50%); z-index: 20;
+      display: flex; align-items: center; gap: .8rem;
+      padding: .55rem .8rem; border-radius: 99px;
+      background: rgba(11, 21, 48, .6); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-line);
+    }
+    .controls .btn { border-radius: 99px; font-weight: 700; padding: .5rem 1.2rem; }
+    .btn-gold { background: var(--gold); border: 0; color: var(--navy); }
+    .btn-gold:hover { background: #ffc94f; color: var(--navy); }
+    .btn-ghost { background: transparent; border: 1px solid var(--glass-line); color: #fff; }
+    .btn-ghost:hover { background: rgba(255, 255, 255, .15); color: #fff; }
+    .btn:disabled { opacity: .35; }
+    .counter { min-width: 4.2rem; text-align: center; font-weight: 700; }
+    .dots { display: flex; gap: .4rem; }
+    .dot { width: .6rem; height: .6rem; border-radius: 50%; background: rgba(255, 255, 255, .35); border: 0; padding: 0; }
+    .dot.on { background: var(--gold); transform: scale(1.35); }
+
+    @media (max-width: 767px) { .dots { display: none; } .slide { align-items: flex-start; } }
+    @media (prefers-reduced-motion: reduce) {
+      .slide, .slide .reveal, .glass, .progress-line { transition: none !important; animation: none !important; }
+      .slide .reveal { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="progress-line" id="progress"></div>
+
+  <!--
+    Фотолорду алмаштыруу: ар бир слайддагы style="--img:url('...')" ичиндеги ссылканы өзгөртүңүз.
+    Unsplash'та сүрөттү ачып, оң баскыч > "Сүрөттүн дарегин көчүрүү" деп коюңуз.
+  -->
+
+  <!-- 1. Титул -->
+  <section class="slide active" style="--img:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80')">
+    <div class="container">
+      <span class="badge-pill reveal" style="--i:0">10-класс: Адам жана коом, Тарых</span>
+      <h1 class="display-title mt-4 mb-3 reveal" style="--i:1">Кыргыз<br><span class="gold">жараны</span></h1>
+      <p class="lead-text reveal" style="--i:2">Улутубуздан жана динибизден жогору турган жалпы иденттүүлүк: бир мамлекет, көп өңчөй эл.</p>
+      <div class="glass d-inline-block mt-3 reveal" style="--i:3; height:auto; padding:.9rem 1.4rem">
+        <i class="bi bi-person-badge gold me-2"></i>Даярдаган: [дыйканбаева Айзирек] &nbsp;|&nbsp; Мугалим: []
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Жарандык иденттүүлүк -->
+  <section class="slide" style="--img:url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1920&q=80')">
+    <div class="container">
+      <h2 class="slide-title reveal" style="--i:0">Жарандык иденттүүлүк: «биз» деген ким?</h2>
+      <p class="lead-text mb-4 reveal" style="--i:1">«Кыргыз жараны» — Кыргызстандын ар бир тургуну өзүн мамлекеттин ээси катары сезүүсү.</p>
+      <div class="row g-4">
+        <div class="col-md-4 reveal" style="--i:2"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-people-fill"></i></div>
+          <h3>Жалпы «биз»</h3>
+          <p>Улутуна, динине жана тилине карабай, бардык тургундарды бириктирет.</p>
+        </div></div>
+        <div class="col-md-4 reveal" style="--i:3"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-diagram-3-fill"></i></div>
+          <h3>Улут ≠ жарандык</h3>
+          <p>Улут — тегибиз. Жарандык — мамлекет менен укуктук жана адептик байланышыбыз. Экөө бири-бирин жокко чыгарбайт.</p>
+        </div></div>
+        <div class="col-md-4 reveal" style="--i:4"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-flag-fill"></i></div>
+          <h3>Эмне үчүн керек?</h3>
+          <p>Ортоктуу эрежелер жана ортоктуу келечек ынтымакты жаратат. Ынтымак — өнүгүүнүн шарты.</p>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Укуктар жана милдеттер -->
+  <section class="slide" style="--img:url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1920&q=80')">
+    <div class="container">
+      <h2 class="slide-title reveal" style="--i:0">Укуктар жана милдеттер: тең салмактуулук</h2>
+      <p class="lead-text mb-4 reveal" style="--i:1">Укук менен милдет — бир тыйындын эки жагы. Экөөсүз тең жарандык болбойт.</p>
+      <div class="row g-4">
+        <div class="col-md-6 reveal" style="--i:2"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-shield-check"></i></div>
+          <h3>Менин укуктарым</h3>
+          <ul>
+            <li>Конституция менен кепилденет</li>
+            <li>Мыйзам алдында бардыгы тең</li>
+            <li>Маалыматка жана ойду билдирүүгө укук</li>
+          </ul>
+        </div></div>
+        <div class="col-md-6 reveal" style="--i:3"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-journal-check"></i></div>
+          <h3>Менин милдеттерим</h3>
+          <ul>
+            <li>Мыйзамды жана башкалардын укугун сыйлоо</li>
+            <li>Салык төлөө жана Мекенди коргоо</li>
+            <li>Табиятты жана тарыхый мурасты сактоо</li>
+          </ul>
+        </div></div>
+      </div>
+      <div class="banner mt-4 reveal" style="--i:4"><i class="bi bi-bank2 me-2"></i>Мыйзам үстөмдүгү: эреже чиновникке да, жөнөкөй жаранга да бирдей.</div>
+    </div>
+  </section>
+
+  <!-- 4. Көп улуттуулук -->
+  <section class="slide" style="--img:url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1920&q=80')">
+    <div class="container">
+      <h2 class="slide-title reveal" style="--i:0">Көп улуттуулук: ар түрдүүлүк — биздин күчүбүз</h2>
+      <p class="lead-text mb-4 reveal" style="--i:1">Кыргызстанда көптөгөн улуттун өкүлдөрү жашайт. Тилдер бири-бирин байытат.</p>
+      <div class="row g-4">
+        <div class="col-md-4 reveal" style="--i:2"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-chat-heart-fill"></i></div>
+          <h3>Мамлекеттик тил</h3>
+          <p>Кыргыз тили — элдин биримдигинин жана улуттук маданияттын өзөгү.</p>
+        </div></div>
+        <div class="col-md-4 reveal" style="--i:3"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-translate"></i></div>
+          <h3>Расмий тил</h3>
+          <p>Орус тили Конституцияда расмий тил катары белгиленген: билим жана баарлашуу көпүрөсү.</p>
+        </div></div>
+        <div class="col-md-4 reveal" style="--i:4"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-globe-europe-africa"></i></div>
+          <h3>Эл аралык тилдер</h3>
+          <p>Англис жана башка тилдер дүйнө менен кызматташууга жана эмгек рыногуна жол ачат.</p>
+        </div></div>
+      </div>
+      <div class="banner mt-4 reveal" style="--i:5"><i class="bi bi-bridge me-2"></i>Жаңы тил башка тилди алмаштырбайт: ал ой жүгүртүү мейкиндигин кеңейтет.</div>
+    </div>
+  </section>
+
+  <!-- 5. Санариптик жарандык -->
+  <section class="slide" style="--img:url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=80')">
+    <div class="container">
+      <h2 class="slide-title reveal" style="--i:0">Санариптик жарандык</h2>
+      <p class="lead-text mb-4 reveal" style="--i:1">Санариптик сабаттуулук — маалыматты табуу, баалоо жана коопсуз колдонуу. Фейкти токтотуу — ар бир колдонуучунун иши.</p>
+      <div class="row g-4">
+        <div class="col-md-4 reveal" style="--i:2"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-search"></i></div>
+          <h3>1. Булагы ким?</h3>
+          <p>Автору, сайты же баракчасы белгилүү жана ишенимдүүбү?</p>
+        </div></div>
+        <div class="col-md-4 reveal" style="--i:3"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-patch-check-fill"></i></div>
+          <h3>2. Далили барбы?</h3>
+          <p>Башка ишенимдүү булактар ушуну ырастайбы? Сүрөт же видео башка жерден алынбаганбы?</p>
+        </div></div>
+        <div class="col-md-4 reveal" style="--i:4"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-exclamation-triangle-fill"></i></div>
+          <h3>3. Эмоцияга чакырабы?</h3>
+          <p>Каарданткан же коркутуучу кабар көп учурда ойлонууга убакыт бербейт.</p>
+        </div></div>
+      </div>
+      <div class="banner mt-4 reveal" style="--i:5"><i class="bi bi-lock-fill me-2"></i>Бөлүшүүдөн мурун: токто, текшер, ойлон. Сырсөзүңдү жана жеке маалыматыңды сакта.</div>
+    </div>
+  </section>
+
+  <!-- 6. Мурас жана табият -->
+  <section class="slide" style="--img:url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80')">
+    <div class="container">
+      <h2 class="slide-title reveal" style="--i:0">Мурас, табият жана заманбап дүйнө</h2>
+      <p class="lead-text mb-4 reveal" style="--i:1">Тамыры терең дарак шамалга туруштук берет, ал эми бутактары жарыкка карай өсөт.</p>
+      <div class="row g-4">
+        <div class="col-md-4 reveal" style="--i:2"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-book-half"></i></div>
+          <h3>Сактайбыз</h3>
+          <ul>
+            <li>«Манас» эпосу жана оозеки адабият</li>
+            <li>Кыргыз тили жана салттар</li>
+            <li>Кол өнөр, күү, көчмөн маданият</li>
+          </ul>
+        </div></div>
+        <div class="col-md-4 reveal" style="--i:3"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-tree-fill"></i></div>
+          <h3>Коргойбуз</h3>
+          <ul>
+            <li>Тоолорду, мөңгүлөрдү, көлдөрдү</li>
+            <li>Сууну үнөмдөйбүз</li>
+            <li>Таштандыны азайтып, көчөт тигебиз</li>
+          </ul>
+        </div></div>
+        <div class="col-md-4 reveal" style="--i:4"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-globe2"></i></div>
+          <h3>Интеграцияланабыз</h3>
+          <ul>
+            <li>Дүйнөлүк билим жана илим менен байланыш</li>
+            <li>Чет тилдер жана санарип технологиялар</li>
+            <li>Эл аралык кызматташуу</li>
+          </ul>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. 10-класстын окуучусу -->
+  <section class="slide" style="--img:url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1920&q=80')">
+    <div class="container">
+      <h2 class="slide-title reveal" style="--i:0">10-класстын окуучусу бүгүн эмне кыла алат?</h2>
+      <p class="lead-text mb-4 reveal" style="--i:1">Өлкөнүн өнүгүшү чоң жыйындардан эмес, күнүмдүк тандоолордон башталат.</p>
+      <div class="row g-4">
+        <div class="col-md-4 reveal" style="--i:2"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-mortarboard-fill"></i></div>
+          <h3>Интеллектуалдык капитал</h3>
+          <p>Билимди, чет тилдерди, санарип жана аналитикалык көндүмдөрдү өздөштүрүү: эртең өлкөнүн кесипкөй адиси болуу үчүн.</p>
+        </div></div>
+        <div class="col-md-4 reveal" style="--i:3"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-megaphone-fill"></i></div>
+          <h3>Коомдук активдүүлүк</h3>
+          <p>Мектептин өзүн-өзү башкаруусуна катышуу, волонтёрдук жана экологиялык демилгелер.</p>
+        </div></div>
+        <div class="col-md-4 reveal" style="--i:4"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-chat-square-heart-fill"></i></div>
+          <h3>Маданияттуу баарлашуу</h3>
+          <p>Башка пикирди сыйлоо, жек көрүүнү жана фейкти жайылтпоо — санариптик жана реалдуу мейкиндикте.</p>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Жыйынтык -->
+  <section class="slide" style="--img:url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1920&q=80')">
+    <div class="container">
+      <h2 class="slide-title reveal" style="--i:0">Жыйынтык</h2>
+      <div class="row g-4 my-2">
+        <div class="col-md-4 reveal" style="--i:1"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-people-fill"></i></div>
+          <h3>Иденттүүлүк</h3>
+          <p>Кыргыз жараны — улутубуздан жогору турган жалпы «биз».</p>
+        </div></div>
+        <div class="col-md-4 reveal" style="--i:2"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-scales"></i></div>
+          <h3>Жоопкерчилик</h3>
+          <p>Укук, тил, санарип жана табият жаатында — анын мазмуну.</p>
+        </div></div>
+        <div class="col-md-4 reveal" style="--i:3"><div class="glass">
+          <div class="icon-ring"><i class="bi bi-rocket-takeoff-fill"></i></div>
+          <h3>Келечек</h3>
+          <p>Тарыхты сыйлоо жана дүйнөгө умтулуу — өнүгүүнүн жолу.</p>
+        </div></div>
+      </div>
+      <h3 class="gold mt-4 reveal" style="--i:4; font-size:clamp(1.6rem,3.4vw,2.6rem); font-weight:800">Мен өлкөнүн өнүгүшүнө кандай салым кошо алам?</h3>
+      <p class="lead-text reveal" style="--i:5">Жообуңду бир иштен баштап көр: бүгүн. Рахмат!</p>
+    </div>
+  </section>
+
+  <!-- Башкаруу -->
+  <nav class="controls" aria-label="Слайддарды башкаруу">
+    <button class="btn btn-ghost" id="prev" type="button"><i class="bi bi-chevron-left me-1"></i>Артта</button>
+    <div class="dots" id="dots"></div>
+    <span class="counter" id="counter">1 / 8</span>
+    <button class="btn btn-gold" id="next" type="button">Алга<i class="bi bi-chevron-right ms-1"></i></button>
+  </nav>
+
+  <script>
+    (function () {
+      var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+      var prevBtn = document.getElementById('prev');
+      var nextBtn = document.getElementById('next');
+      var counter = document.getElementById('counter');
+      var progress = document.getElementById('progress');
+      var dotsBox = document.getElementById('dots');
+      var current = 0;
+
+      // Чекиттер (слайдга түз өтүү үчүн)
+      var dots = slides.map(function (_, i) {
+        var d = document.createElement('button');
+        d.className = 'dot';
+        d.type = 'button';
+        d.setAttribute('aria-label', (i + 1) + '-слайд');
+        d.addEventListener('click', function () { go(i); });
+        dotsBox.appendChild(d);
+        return d;
+      });
+
+      function go(index) {
+        if (index < 0 || index >= slides.length) return;
+        current = index;
+        slides.forEach(function (s, i) {
+          s.classList.toggle('active', i === current);
+          s.classList.toggle('before', i < current);
+          if (i === current) s.scrollTop = 0;
+        });
+        dots.forEach(function (d, i) { d.classList.toggle('on', i === current); });
+        counter.textContent = (current + 1) + ' / ' + slides.length;
+        progress.style.width = ((current + 1) / slides.length * 100) + '%';
+        prevBtn.disabled = current === 0;
+        nextBtn.disabled = current === slides.length - 1;
+      }
+
+      prevBtn.addEventListener('click', function () { go(current - 1); });
+      nextBtn.addEventListener('click', function () { go(current + 1); });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); go(current + 1); }
+        if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(current - 1); }
+        if (e.key === 'Home') go(0);
+        if (e.key === 'End') go(slides.length - 1);
+      });
+
+      // Сенсордук экрандарда сүрүү
+      var startX = null;
+      document.addEventListener('touchstart', function (e) { startX = e.changedTouches[0].clientX; }, { passive: true });
+      document.addEventListener('touchend', function (e) {
+        if (startX === null) return;
+        var dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) > 70) go(dx < 0 ? current + 1 : current - 1);
+        startX = null;
+      }, { passive: true });
+
+      go(0);
+    })();
+  </script>
+</body>
+</html>
